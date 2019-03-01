@@ -1,3 +1,10 @@
+## Fork to add support for raw Strings from a Kinesis stream.
+If the input String is JSON format and contains a valid `timestamp`(long) and `source`(String) these will be parsed into the native Graylog equivalent fields, otherwise the current timestamp will be used.
+
+To use this update replace the current *graylog-plugin-aws-3.0.0.jar* plugin on the server (/usr/share/graylog-server/plugin) with the mvn package output jar and restart Graylog (sudo /etc/init.d/graylog-server restart).
+
+Once the new jar is in place in the Input tab within the Graylog web, System->Inputs and add a new Input of type *AWS Kinesis Stream*.
+
 # AWS Plugin For Graylog
 
 [![Build Status](https://travis-ci.org/Graylog2/graylog-plugin-aws.svg)](https://travis-ci.org/Graylog2/graylog-plugin-aws)

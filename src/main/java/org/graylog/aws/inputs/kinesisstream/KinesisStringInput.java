@@ -2,8 +2,8 @@ package org.graylog.aws.inputs.kinesisstream;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.assistedinject.Assisted;
-import org.graylog.aws.inputs.codecs.KinesisStreamCodec;
-import org.graylog.aws.inputs.transports.KinesisTransport;
+import org.graylog.aws.inputs.codecs.KinesisStringCodec;
+import org.graylog.aws.inputs.transports.KinesisStringTransport;
 import org.graylog2.plugin.LocalMetricRegistry;
 import org.graylog2.plugin.ServerStatus;
 import org.graylog2.plugin.configuration.Configuration;
@@ -13,18 +13,18 @@ import org.graylog2.plugin.inputs.annotations.FactoryClass;
 
 import javax.inject.Inject;
 
-public class StreamInput extends MessageInput {
+public class KinesisStringInput extends MessageInput {
     private static final String NAME = "AWS Kinesis Stream";
 
     @Inject
-    public StreamInput(@Assisted Configuration configuration,
-                       MetricRegistry metricRegistry,
-                       KinesisTransport.Factory transport,
-                       LocalMetricRegistry localRegistry,
-                       KinesisStreamCodec.Factory codec,
-                       Config config,
-                       Descriptor descriptor,
-                       ServerStatus serverStatus) {
+    public KinesisStringInput(@Assisted Configuration configuration,
+                              MetricRegistry metricRegistry,
+                              KinesisStringTransport.Factory transport,
+                              LocalMetricRegistry localRegistry,
+                              KinesisStringCodec.Factory codec,
+                              Config config,
+                              Descriptor descriptor,
+                              ServerStatus serverStatus) {
         super(
                 metricRegistry,
                 configuration,
@@ -38,9 +38,9 @@ public class StreamInput extends MessageInput {
     }
 
     @FactoryClass
-    public interface Factory extends MessageInput.Factory<StreamInput> {
+    public interface Factory extends MessageInput.Factory<KinesisStringInput> {
         @Override
-        StreamInput create(Configuration configuration);
+        KinesisStringInput create(Configuration configuration);
 
         @Override
         Config getConfig();
@@ -58,7 +58,7 @@ public class StreamInput extends MessageInput {
     @ConfigClass
     public static class Config extends MessageInput.Config {
         @Inject
-        public Config(KinesisTransport.Factory transport, KinesisStreamCodec.Factory codec) {
+        public Config(KinesisStringTransport.Factory transport, KinesisStringCodec.Factory codec) {
             super(transport.getConfig(), codec.getConfig());
         }
     }

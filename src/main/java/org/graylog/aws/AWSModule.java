@@ -8,8 +8,10 @@ import org.graylog.aws.inputs.cloudtrail.CloudTrailTransport;
 import org.graylog.aws.inputs.cloudwatch.CloudWatchLogsInput;
 import org.graylog.aws.inputs.codecs.CloudWatchFlowLogCodec;
 import org.graylog.aws.inputs.codecs.CloudWatchRawLogCodec;
+import org.graylog.aws.inputs.codecs.KinesisStringCodec;
 import org.graylog.aws.inputs.flowlogs.FlowLogsInput;
-import org.graylog.aws.inputs.kinesisstream.StreamInput;
+import org.graylog.aws.inputs.kinesisstream.KinesisStringInput;
+import org.graylog.aws.inputs.transports.KinesisStringTransport;
 import org.graylog.aws.inputs.transports.KinesisTransport;
 import org.graylog.aws.processors.instancelookup.AWSInstanceNameLookupProcessor;
 import org.graylog.aws.processors.instancelookup.InstanceLookupTable;
@@ -29,7 +31,11 @@ public class AWSModule extends PluginModule {
         addTransport(KinesisTransport.NAME, KinesisTransport.class);
         addMessageInput(FlowLogsInput.class);
         addMessageInput(CloudWatchLogsInput.class);
-        addMessageInput(StreamInput.class);
+
+        // Kinesis
+        addCodec(KinesisStringCodec.NAME, KinesisStringCodec.class);
+        addTransport(KinesisStringTransport.NAME, KinesisStringTransport.class);
+        addMessageInput(KinesisStringInput.class);
 
         // Instance name lookup
         addMessageProcessor(AWSInstanceNameLookupProcessor.class, AWSInstanceNameLookupProcessor.Descriptor.class);

@@ -13,22 +13,13 @@ import com.amazonaws.services.kinesis.clientlibrary.types.ProcessRecordsInput;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownInput;
 import com.amazonaws.services.kinesis.model.Record;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.rholder.retry.Attempt;
-import com.github.rholder.retry.RetryException;
-import com.github.rholder.retry.RetryListener;
-import com.github.rholder.retry.Retryer;
-import com.github.rholder.retry.RetryerBuilder;
-import com.github.rholder.retry.StopStrategies;
-import com.github.rholder.retry.WaitStrategies;
+import com.github.rholder.retry.*;
 import okhttp3.HttpUrl;
 import org.graylog.aws.auth.AWSAuthProvider;
-import org.graylog.aws.cloudwatch.CloudWatchLogData;
-import org.graylog.aws.cloudwatch.CloudWatchLogEntry;
 import org.graylog.aws.config.AWSPluginConfiguration;
 import org.graylog.aws.config.Proxy;
-import org.graylog.aws.inputs.transports.KinesisTransport;
+import org.graylog.aws.inputs.transports.KinesisStringTransport;
 import org.graylog.aws.inputs.transports.KinesisTransportState;
-import org.graylog2.plugin.Tools;
 import org.graylog2.plugin.system.NodeId;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -36,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
-import java.util.Iterator;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -44,9 +35,9 @@ import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
 
-public class KinesisConsumer implements Runnable {
+public class KinesisStringConsumer implements Runnable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(KinesisConsumer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KinesisStringConsumer.class);
 
     private final Region region;
     private final String kinesisStreamName;
@@ -59,7 +50,7 @@ public class KinesisConsumer implements Runnable {
     private final Integer recordBatchSize;
 
     private Worker worker;
-    private KinesisTransport transport;
+    private KinesisStringTransport transport;
     private final ObjectMapper objectMapper;
     /**
      * Checkpointing must be performed when the KinesisConsumer needs to be shuts down due to sustained throttling.
@@ -68,17 +59,17 @@ public class KinesisConsumer implements Runnable {
      */
     private String lastSuccessfulRecordSequence = null;
 
-    public KinesisConsumer(String kinesisStreamName,
-                           Region region,
-                           Consumer<byte[]> dataHandler,
-                           AWSPluginConfiguration awsConfig,
-                           AWSAuthProvider authProvider,
-                           NodeId nodeId,
-                           @Nullable HttpUrl proxyUrl,
-                           KinesisTransport transport,
-                           ObjectMapper objectMapper,
-                           Integer maxThrottledWaitMillis,
-                           Integer recordBatchSize) {
+    public KinesisStringConsumer(String kinesisStreamName,
+                                 Region region,
+                                 Consumer<byte[]> dataHandler,
+                                 AWSPluginConfiguration awsConfig,
+                                 AWSAuthProvider authProvider,
+                                 NodeId nodeId,
+                                 @Nullable HttpUrl proxyUrl,
+                                 KinesisStringTransport transport,
+                                 ObjectMapper objectMapper,
+                                 Integer maxThrottledWaitMillis,
+                                 Integer recordBatchSize) {
         this.kinesisStreamName = requireNonNull(kinesisStreamName, "kinesisStreamName");
         this.region = requireNonNull(region, "region");
         this.dataHandler = requireNonNull(dataHandler, "dataHandler");
@@ -167,20 +158,13 @@ public class KinesisConsumer implements Runnable {
                         final byte[] dataBytes = new byte[dataBuffer.remaining()];
                         dataBuffer.get(dataBytes);
 
-                        // Decompress response.
-                        final byte[] bytes = Tools.decompressGzip(dataBytes).getBytes();
+                        LOG.error("data-bytes<{}>", new String(dataBytes, StandardCharsets.UTF_8));
 
                         // Extract messages, so that they can be committed to journal one by one.
-                        final CloudWatchLogData data = objectMapper.readValue(bytes, CloudWatchLogData.class);
+                        //final MyMessage data = objectMapper.readValue(dataBytes, MyMessage.class);
 
-                        Iterator<CloudWatchLogEntry> iterator =
-                                data.logEvents.stream().map(le -> new CloudWatchLogEntry(data.logGroup, data.logStream, le.timestamp, le.message)).iterator();
-
-                        // Push all messages to the Journal.
-                        while (iterator.hasNext()) {
-                            CloudWatchLogEntry next = iterator.next();
-                            dataHandler.accept(objectMapper.writeValueAsBytes(next));
-                        }
+                        //LOG.error("data<{}>", data);
+                        dataHandler.accept(dataBytes);
 
                         lastSuccessfulRecordSequence = record.getSequenceNumber();
                     } catch (Exception e) {

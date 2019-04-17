@@ -158,7 +158,7 @@ public class KinesisStringConsumer implements Runnable {
                         final byte[] dataBytes = new byte[dataBuffer.remaining()];
                         dataBuffer.get(dataBytes);
 
-                        LOG.error("data-bytes<{}>", new String(dataBytes, StandardCharsets.UTF_8));
+                        LOG.debug("data-bytes<{}>", new String(dataBytes, StandardCharsets.UTF_8));
 
                         // Extract messages, so that they can be committed to journal one by one.
                         //final MyMessage data = objectMapper.readValue(dataBytes, MyMessage.class);

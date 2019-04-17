@@ -72,7 +72,7 @@ public class KinesisStringCodec extends AbstractCodec {
     }
 
     public static Message buildMessage(String raw, GraylogKeyFields keyFields) {
-        LOG.info("Raw Input<{}>", raw);
+        LOG.debug("Raw Input<{}>", raw);
         final Message result = new Message(
             raw,
             (keyFields == null ? UNKNOWN_SOURCE : keyFields.source),
